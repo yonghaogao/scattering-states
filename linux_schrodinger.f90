@@ -139,25 +139,26 @@
    !   OUTPUT:
    !   y(i): wave function
    
-       subroutine left(e,xmathch,delta,x,y)
+       subroutine left(e,xmathch,delta,l,x,y)
        use para
        implicit none
-       integer::i,num1
+       integer::i,l
        real*8::delta,h,xmathch
-       real*8,dimension(1:2000)::x,y
-       real*8,dimension(1:2000)::V,k2
+       real*8,dimension(0:2000)::x,y
+       real*8,dimension(0:2000)::V,k2
        real*8::gausspot
        real*8::E
        num1=200
        h=(xmathch-xmin)/num1
        y(1)=0
        y(2)=h
-       do i=1,num1+3
-           x(i)=xmin+(i-1)*h
+       y(3)=h**(l+1)
+       do i=0,n
+           x(i)=xmin+i*h
            V(i)=delta*gausspot(x(i))
-           k2(i)=2*rm*abs(e-v(i))/hbarc**2
+           k2(i)=2*rm*(l*(l+1)*1./x(i)**2+e-v(i))/hbarc**2
        end do
-       do i=2,num1+2
+       do i=3,n+2
            y(i+1)=2*(1-5*h**2*k2(i)/12.)*y(i)-(1+h**2*k2(i-1)/12.)*y(i-1)
            y(i+1)=y(i+1)/(1+h**2*k2(i+1)/12.)
        end do
