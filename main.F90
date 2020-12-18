@@ -28,39 +28,35 @@
 program main
    use para
    implicit none
-   integer::i,j,l
-   real*8,dimension(1:3000)::xl,yl
-   real*8,dimension(1:3000)::y
-   real*8,dimension(1:3000)::X,W
-   real*8,dimension(1:3000)::r,V
-   real*8::xmathch,h
-   real*8::c,E,n0
-   real*8::delta,ddelta
+   integer::i,l
+   real*8,dimension(0:3000)::xl,yl
+   real*8,dimension(0:3000)::y
+   real*8,dimension(0:3000)::X,W
+   real*8,dimension(0:3000)::r,V
+   real*8,dimension(1:3)::s
+   real*8::h
+   real*8::c,E
    real*8::sum
-   real*8::dyin,dyout
+   real*8::dyn
+   complex*8::b
    real*8,external::FFR4,gausspot
-   real*8,parameter::v0=-72.25d0
    e=-2.224d0
-   xmathch=2.0d0
    delta=1.
    h=(xmax-xmin)/n
+   b=(0.,1.0)
    do l=1,3
-      call left(e,h,xmathch,delta,l,x,y)
-
-     
+      call left(e,h,delta,l,x,y)
+      call coul90(rho,eta,zero,lmax,nfc,ngc,nfcp,ngcp,0,ifail)
+      if (ifail/=0) then
+      write(*,*) 'coul90: ifail=',ifail; stop
+      endif
+      !compute the s matrix
+      !s(l)=(y(n)*Hl_'-dyn*Hl_)/(y(n)*Hl+-dyn*Hl+)
+      !compute c
+      !c=b*(Hl_-S(l)*Hl+)/(2*y(n))
+      dyn=(y(n-1)-8.*y(n)+8.*y(n+2)-y(n+3))/(12.*h)   
       !  The normalization 
-      c=0.
-      do i=1,2*n
-         r(i)=xmin+(i-1)*h
-      end do   
-      do i=1,2*n
-         c=c+(r(i+1)-r(i))/2.*(y(i)**2+y(i+1)**2)
-      end do   
-      do i=1,2*n+1
-          r(i)=xmin+(i-1)*h
-          y(i)=y(i)/sqrt(c)
-          write(10,*) r(i),y(i)
-      end do
+     
    end do
 end program
    !------------------------------------------------------------------------
@@ -80,13 +76,13 @@ end program
    !   OUTPUT:
    !   y(i): wave function
    
-       subroutine left(e,h,xmathch,delta,l,x,y)
+       subroutine left(e,h,delta,l,x,y)
        use para
        implicit none
        integer::i,l
-       real*8::delta,h,xmathch
-       real*8,dimension(0:2000)::x,y
-       real*8,dimension(0:2000)::V,k2
+       real*8::delta,h
+       real*8,dimension(0:3000)::x,y
+       real*8,dimension(0:3000)::V,k2
        real*8::gausspot
        real*8::E
        y(0)=0

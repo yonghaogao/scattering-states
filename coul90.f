@@ -120,6 +120,9 @@ CQ    DATA RT2DPI /0.79788 45608 02865 35587 98921 19868 76373 Q0/
 C-----THIS CONSTANT IS  DSQRT(TWO / PI):
 C-----USE Q0 FOR IBM REAL*16: D0 FOR REAL*8 AND DOUBLE PRECISION
 C----------------CHANGE ACCUR TO SUIT MACHINE AND PRECISION REQUIRED
+      if (ifail/=0) then
+      write(*,*) 'coul90: ifail=',ifail; stop
+      endif
                         ACCUR = 1.0D-14
       IFAIL = 0
       IEXP  = 1
