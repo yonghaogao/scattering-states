@@ -28,35 +28,50 @@
 program main
    use para
    implicit none
-   integer::i,l
-   real*8,dimension(0:3000)::xl,yl
-   real*8,dimension(0:3000)::y
-   real*8,dimension(0:3000)::X,W
-   real*8,dimension(0:3000)::r,V
-   real*8,dimension(1:3)::s
-   real*8::h
-   real*8::c,E
-   real*8::sum
+   integer::i,l,lmax,ifail
+   real*8,dimension(0:3000)::x,y,yreal
+   real*8,dimension(0:3000)::R,V,k2
+   real*8,dimension(1:3)::s,c
+   real*8,dimension(1:3)::nfc,ngc,nfcp,ngcp
+   real*8::h,zero,eta,rho
+   real*8::E
    real*8::dyn
+   complex*8,dimension(1:3)::hin,hout
+   complex*8,dimension(1:3)::dyhin,dyhout
    complex*8::b
-   real*8,external::FFR4,gausspot
+   real*8,external::gausspot
    e=-2.224d0
-   delta=1.
    h=(xmax-xmin)/n
    b=(0.,1.0)
-   do l=1,3
-      call left(e,h,delta,l,x,y)
-      call coul90(rho,eta,zero,lmax,nfc,ngc,nfcp,ngcp,0,ifail)
-      if (ifail/=0) then
-      write(*,*) 'coul90: ifail=',ifail; stop
-      endif
+   eta=0.
+   lmax=3
+   ifail=0
+   do i=0,n
+     r(i)=xmin+i*h
+     V(i)=gausspot(r(i))
+     k2(i)=2*rm*(l*(l+1)*1./r(i)**2+e-v(i))/hbarc**2
+   end do
+   rho=xmax*sqrt(k2(n))
+   call coul90(rho,eta,zero,lmax,nfc,ngc,nfcp,ngcp,0,ifail)
+   do l=1,lmax
+      call left(e,h,l,x,y)
+      dyn=(y(n-1)-8.*y(n)+8.*y(n+2)-y(n+3))/(12.*h)  
+      hin(l)=nfc(l)-b*ngc(l)
+      hout(l)=nfc(l)+b*ngc(l)
+      dyhin(l)=nfcp(l)-b*ngcp(l)
+      dyhout(l)=nfcp(l)+b*ngcp(l)
       !compute the s matrix
-      !s(l)=(y(n)*Hl_'-dyn*Hl_)/(y(n)*Hl+-dyn*Hl+)
+      s(l)=(y(n)*dyhin(l)-dyn*hin(l))/(y(n)*dyhout(l)-dyn*hout(l))
       !compute c
-      !c=b*(Hl_-S(l)*Hl+)/(2*y(n))
-      dyn=(y(n-1)-8.*y(n)+8.*y(n+2)-y(n+3))/(12.*h)   
-      !  The normalization 
-     
+      c(l)=b*(hin(l)-s(l)*hout(l))/(2*y(n))
+   end do
+   !  OUTPUT S-METRIX C & WAVE FUNCTION
+   do l=1,lmax
+   write(*,*) s(l),c(l)
+   end do
+   yreal=y*c(lmax)
+   do i=0,n
+    write(10,*)yreal(i)  
    end do
 end program
    !------------------------------------------------------------------------
@@ -76,11 +91,11 @@ end program
    !   OUTPUT:
    !   y(i): wave function
    
-       subroutine left(e,h,delta,l,x,y)
+       subroutine left(e,h,l,x,y)
        use para
        implicit none
        integer::i,l
-       real*8::delta,h
+       real*8::h
        real*8,dimension(0:3000)::x,y
        real*8,dimension(0:3000)::V,k2
        real*8::gausspot
