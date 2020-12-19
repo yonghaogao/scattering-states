@@ -1,10 +1,10 @@
 OBJ= coul90.o \
-    main.o
+   main.o
 
 
-LIB = -L ../lapack-3.9.0  -llapack  -lrefblas
-F90 = gfortran
-FFLAGS = -O2 -Wtabs   -ffixed-line-length-0  
+LIB = -mkl
+F90 = ifort
+FFLAGS = -O3 -g
 
 .SUFFIXES: .F90 .f90 .f95 .F95
 
@@ -32,5 +32,6 @@ bound:  $(OBJ)
 
 clean: 
 	rm -f npbound $(objectsbound)  *.mod core *.o 
+
 
 

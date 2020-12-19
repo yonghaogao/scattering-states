@@ -9,7 +9,8 @@
    module para
       implicit none
       integer,parameter::n=2000
-      real*8,parameter::xmin=0.d0,xmax=20.d0
+      real*8,parameter::xmin=0.d0
+      real*8,parameter::xmax=20.d0
       real*8,parameter::Tol=1.E-5
       real*8,parameter::hbarc=197.327d0
       real*8,parameter::rm=469.566213d0
@@ -27,11 +28,12 @@
 !  dyin(dyout):the left(right) Derivative at xm
 program main
    use para
+   use coulfunc
    implicit none
    integer::i,l,lmax,ifail
    real*8,dimension(0:3000)::x,y,yreal
    real*8,dimension(0:3000)::R,V,k2
-   real*8,dimension(1:3)::s,c
+   complex*8,dimension(1:3)::s,c
    real*8,dimension(1:3)::nfc,ngc,nfcp,ngcp
    real*8::h,zero,eta,rho
    real*8::E
@@ -45,14 +47,19 @@ program main
    b=(0.,1.0)
    eta=0.
    lmax=3
+   zero=0.
    ifail=0
+   open(10,file='data')
    do i=0,n
      r(i)=xmin+i*h
      V(i)=gausspot(r(i))
      k2(i)=2*rm*(l*(l+1)*1./r(i)**2+e-v(i))/hbarc**2
    end do
-   rho=xmax*sqrt(k2(n))
+   rho=xmax*sqrt(abs(k2(n)))
    call coul90(rho,eta,zero,lmax,nfc,ngc,nfcp,ngcp,0,ifail)
+   if (ifail/=0) then
+    write(*,*) 'coul90: ifail=',ifail; stop
+   endif
    do l=1,lmax
       call left(e,h,l,x,y)
       dyn=(y(n-1)-8.*y(n)+8.*y(n+2)-y(n+3))/(12.*h)  
@@ -67,12 +74,16 @@ program main
    end do
    !  OUTPUT S-METRIX C & WAVE FUNCTION
    do l=1,lmax
-   write(*,*) s(l),c(l)
+   write(10,*)s(l),c(l)
    end do
-   yreal=y*c(lmax)
    do i=0,n
-    write(10,*)yreal(i)  
+    write(10,*)x(i),y(i)  
    end do
+   close(10)
+   !yreal=y*c(lmax)
+   !do i=0,n
+   ! write(10,*)yreal(i)  
+   !end do
 end program
    !------------------------------------------------------------------------
    
