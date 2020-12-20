@@ -1,4 +1,4 @@
-!!>  this subroutine generates some points of  
+!!>  this subroutine generates some constants 
 !  Parameters :
 !  xmin(xmax):the lower(upper) limit of integral
 !  tol:  error range
@@ -16,15 +16,12 @@
       real*8,parameter::rm=469.566213d0
    end module
 !-----------------------------------------
-!!>  this subroutine calculates standard gauss Legendre points 
+!!>  this subroutine calculates wave function 
 !  rm=mn*mp*c**2/(mn+mp)= 469.5662127985447 Mev
 !  delta: controlled variable
 !  h: step length
 !  c: Normalized parameter
-!  yl:wave function (left)
-!  yr:wave function (right)
-!  y: the whole wave function
-!  sum: the integral of the wave function
+!  y: the wave function
 !  dyin(dyout):the left(right) Derivative at xm
 program main
    use para
@@ -50,10 +47,10 @@ program main
    zero=0.
    ifail=0
    open(10,file='data')
-   do i=0,n
+   do i=1,n
      r(i)=xmin+i*h
      V(i)=gausspot(r(i))
-     k2(i)=2*rm*(l*(l+1)*1./r(i)**2+e-v(i))/hbarc**2
+     k2(i)=2*rm*(e-v(i))/hbarc**2-l*(l+1)*1./x(i)**2
    end do
    rho=xmax*sqrt(abs(k2(n)))
    call coul90(rho,eta,zero,lmax,nfc,ngc,nfcp,ngcp,0,ifail)
@@ -62,19 +59,19 @@ program main
    endif
    do l=1,lmax
       call left(e,h,l,x,y)
-      dyn=(y(n-1)-8.*y(n)+8.*y(n+2)-y(n+3))/(12.*h)  
-      hin(l)=nfc(l)-b*ngc(l)
-      hout(l)=nfc(l)+b*ngc(l)
-      dyhin(l)=nfcp(l)-b*ngcp(l)
-      dyhout(l)=nfcp(l)+b*ngcp(l)
-      !compute the s matrix
+      dyn=(y(n-2)-8.*y(n-1)+8.*y(n+1)-y(n+2))/(12.*h)  
+      hin(l)=ngc(l)-b*nfc(l)
+      hout(l)=ngc(l)+b*nfc(l)
+      dyhin(l)=ngcp(l)-b*nfcp(l)
+      dyhout(l)=ngcp(l)+b*nfcp(l)
+      !  compute the s matrix
       s(l)=(y(n)*dyhin(l)-dyn*hin(l))/(y(n)*dyhout(l)-dyn*hout(l))
-      !compute c
+      !  compute c
       c(l)=b*(hin(l)-s(l)*hout(l))/(2*y(n))
    end do
    !  OUTPUT S-METRIX C & WAVE FUNCTION
    do l=1,lmax
-   write(10,*)s(l),c(l)
+      write(10,*)s(l),c(l)
    end do
    do i=0,n
     write(10,*)x(i),y(i)  
@@ -114,10 +111,10 @@ end program
        y(0)=0
        y(1)=h
        y(2)=h**(l+1)
-       do i=0,n
+       do i=1,n
            x(i)=xmin+i*h
            V(i)=gausspot(x(i))
-           k2(i)=2*rm*(l*(l+1)*1./x(i)**2+e-v(i))/hbarc**2
+           k2(i)=2*rm*(e-v(i))/hbarc**2-l*(l+1)*1./x(i)**2
        end do
        do i=2,n+2
            y(i+1)=2*(1-5*h**2*k2(i)/12.)*y(i)-(1+h**2*k2(i-1)/12.)*y(i-1)
@@ -131,7 +128,7 @@ end program
        function gausspot(r)
          implicit none
           real*8 r,v0,r0,gausspot,a
-          v0=-150d0
+          v0=-72.16d0
           r0=0.
           a=1.484d0
             if (a.gt.1e-6) then
