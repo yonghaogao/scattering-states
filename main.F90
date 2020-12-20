@@ -29,7 +29,7 @@ program main
    implicit none
    integer::i,l,lmax,ifail
    real*8,dimension(0:3000)::x,y,yreal
-   real*8,dimension(0:3000)::R,V,k2
+   real*8,dimension(0:3000)::k2
    complex*8,dimension(1:3)::s,c
    real*8,dimension(1:3)::nfc,ngc,nfcp,ngcp
    real*8::h,zero,eta,rho
@@ -46,41 +46,35 @@ program main
    lmax=3
    zero=0.
    ifail=0
-   open(10,file='data')
-   do i=1,n
-     r(i)=xmin+i*h
-     V(i)=gausspot(r(i))
-     k2(i)=2*rm*(e-v(i))/hbarc**2-l*(l+1)*1./x(i)**2
-   end do
-   rho=xmax*sqrt(abs(k2(n)))
-   call coul90(rho,eta,zero,lmax,nfc,ngc,nfcp,ngcp,0,ifail)
-   if (ifail/=0) then
-    write(*,*) 'coul90: ifail=',ifail; stop
-   endif
+   open(10,file='result')
    do l=1,lmax
+      k2(n)=2*rm*(e-gausspot(xmax))/hbarc**2-l*(l+1)*1./xmax**2
+      rho=xmax*sqrt(abs(k2(n)))
+      call coul90(rho,eta,zero,lmax,nfc,ngc,nfcp,ngcp,0,ifail)
+      if (ifail/=0) then
+      write(*,*) 'coul90: ifail=',ifail; stop
+      endif
       call left(e,h,l,x,y)
       dyn=(y(n-2)-8.*y(n-1)+8.*y(n+1)-y(n+2))/(12.*h)  
-      hin(l)=ngc(l)-b*nfc(l)
-      hout(l)=ngc(l)+b*nfc(l)
-      dyhin(l)=ngcp(l)-b*nfcp(l)
-      dyhout(l)=ngcp(l)+b*nfcp(l)
+      hin(l)=ngc(l)+b*nfc(l)
+      hout(l)=ngc(l)-b*nfc(l)
+      dyhin(l)=ngcp(l)+b*nfcp(l)
+      dyhout(l)=ngcp(l)-b*nfcp(l)
       !  compute the s matrix
-      s(l)=(y(n)*dyhin(l)-dyn*hin(l))/(y(n)*dyhout(l)-dyn*hout(l))
+      s(l)=(y(n)*dyhout(l)-dyn*hout(l))/(y(n)*dyhin(l)-dyn*hin(l))
       !  compute c
-      c(l)=b*(hin(l)-s(l)*hout(l))/(2*y(n))
-   end do
-   !  OUTPUT S-METRIX C & WAVE FUNCTION
-   do l=1,lmax
+      c(l)=b*(hout(l)-s(l)*hin(l))/(2*y(n))
+      !  OUTPUT S-METRIX C & WAVE FUNCTION
       write(10,*)s(l),c(l)
-   end do
-   do i=0,n
-    write(10,*)x(i),y(i)  
+      do i=0,n
+        write(10,*)x(i),y(i)  
+       end do
+       !yreal=y*c(lmax)
+       !do i=0,n
+       ! write(10,*)yreal(i)  
+       !end do
    end do
    close(10)
-   !yreal=y*c(lmax)
-   !do i=0,n
-   ! write(10,*)yreal(i)  
-   !end do
 end program
    !------------------------------------------------------------------------
    
