@@ -43,7 +43,7 @@ program main
    h=(xmax-xmin)/n
    b=(0.,1.0)
    eta=0.
-   lmax=3
+   lmax=5
    zero=0.
    ifail=0
    open(10,file='result')
