@@ -4,7 +4,7 @@ OBJ= coul90.o \
 
 LIB = -mkl
 F90 = ifort
-FFLAGS = -O3 -g
+FFLAGS = -g
 
 .SUFFIXES: .F90 .f90 .f95 .F95
 
@@ -12,7 +12,7 @@ all: bound
 
 
 bound:  $(OBJ)
-	$(F90) -o npbound $(FFLAGS) $(OBJ) $(LIB)
+	$(F90) -o npscattering $(FFLAGS) $(OBJ) $(LIB)
 
 
 
@@ -31,7 +31,7 @@ bound:  $(OBJ)
 
 
 clean: 
-	rm -f npbound $(objectsbound)  *.mod core *.o 
+	rm -f npscattering $(objectsbound)  *.mod core *.o 
 
 
 
