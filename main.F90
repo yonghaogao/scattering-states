@@ -8,20 +8,19 @@
 !  xm: match point
    module input
     implicit none
-    integer,parameter::n=2000
+    integer,parameter::n=600
     integer,parameter::lmax=5
     real*8,parameter::xmin=0.d0
-    real*8,parameter::xmax=20.d0
+    real*8,parameter::xmax=60.d0
     real*8,parameter::hbarc=197.327d0
     real*8,parameter::mp=1.0078d0
     real*8,parameter::mn=1.0086d0
     real*8,parameter::amu=931.49432d0
-    real*8,parameter::ecm=10.0d0
-    !real*8:: rm,e
+    real*8,parameter::elab=10.0d0
  end module
 !-----------------------------------------
 !!>  this subroutine calculates wave function 
-!  rm=mn*mp*c**2/(mn+mp)= 469.5662127985447 Mev
+!  rm=mn*mp*amu/(mn+mp)= 469.5662127985447 Mev
 !  delta: controlled variable
 !  h: step length
 !  c: Normalized parameter
@@ -32,51 +31,47 @@ program main
  use coulfunc
  implicit none
  integer::i,l,ifail
- real*8,dimension(0:3000)::x,y,yreal
- real*8,dimension(0:3000)::k2
- complex*8,dimension(1:3)::s
- real*8,dimension(1:3)::nfc,ngc,nfcp,ngcp,c
+ real*8::ecm,rm,k
  real*8::h,zero,eta,rho
- real*8::dyn,rm,e
- complex*8,dimension(1:3)::hin,hout
- complex*8,dimension(1:3)::dyhin,dyhout
- complex*8::b
+ complex*16::b,dyn
+ real*8,dimension(0:3000)::x
+ real*8,dimension(1:5)::nfc,ngc,nfcp,ngcp
+ complex*16,dimension(0:3000)::y,yreal
+ complex*16,dimension(1:5)::s,c
+ complex*16,dimension(1:5)::hin,hout
+ complex*16,dimension(1:5)::dyhin,dyhout
  real*8,external::gausspot
  rm=mp*mn*amu/(mp+mn)
- e=ecm*(mp+mn)/mn
+ ecm=elab*mn/(mp+mn)
  h=(xmax-xmin)/n
  b=(0.,1.0)
  eta=0.
  zero=0.
  ifail=0
+ k=sqrt(2*rm*ecm)/hbarc
+ rho=xmax*k
+ call COUL90(rho,eta,zero,lmax,nfc,ngc,nfcp,ngcp,0,ifail)
+ if (ifail/=0) then
+ write(*,*) 'coul90: ifail=',ifail; stop
+ endif
  do l=0,lmax
-    k2(n)=2*rm*(e-gausspot(xmax))/hbarc**2-l*(l+1)*1./xmax**2
-    rho=xmax*k2(n)
-    call COUL90(rho,eta,zero,lmax,nfc,ngc,nfcp,ngcp,0,ifail)
-    if (ifail/=0) then
-    write(*,*) 'coul90: ifail=',ifail; stop
-    endif
-    call left(rm,e,h,l,x,y)
+    call left(rm,ecm,h,l,x,y)
     dyn=(y(n-2)-8.*y(n-1)+8.*y(n+1)-y(n+2))/(12.*h)  
     hin(l)=ngc(l)+b*nfc(l)
     hout(l)=ngc(l)-b*nfc(l)
     dyhin(l)=ngcp(l)+b*nfcp(l)
     dyhout(l)=ngcp(l)-b*nfcp(l)
-    write(14,*)l,dyn,hin(l),hout(l),dyhin(l),dyhout(l)
     !  compute the s matrix
     s(l)=(y(n)*dyhout(l)-dyn*hout(l))/(y(n)*dyhin(l)-dyn*hin(l))
     !  compute c
     c(l)=b*(hout(l)-s(l)*hin(l))/(2*y(n))
     !  OUTPUT S-METRIX C & WAVE FUNCTION
-    write(13,*)s(l),c(l),l
+    yreal=y*c(l)
+    !write(*,*)l,real(s(l))
     do i=0,n
-      write(11,*)x(i),y(i)  
+      write(11,*)x(i),real(yreal(i)),aimag(yreal(i))  
     end do
     write(11,*)'&'
-     !yreal=y*c(lmax)
-     !do i=0,n
-     ! write(10,*)yreal(i)  
-     !end do
  end do
 end program
  !------------------------------------------------------------------------
@@ -100,21 +95,20 @@ end program
      use input
      implicit none
      integer::i,l
-     real*8::h,rm,e
-     real*8,dimension(0:3000)::x,y
-     real*8,dimension(0:3000)::V,k2
+     real*8::h,e,rm
+     real*8,dimension(0:3000)::x
+     complex*16,dimension(0:3000)::y
+     complex*16,dimension(0:3000)::V,k2
      real*8,external::gausspot
      y(0)=0
      y(1)=h
      k2(1)=2*rm*(e-gausspot(h))/hbarc**2-l*(l+1)*1./h**2
      y(2)=2.*y(1)-h**2*k2(1)*y(1)
      write(12,*)l,y(2)
-     write(12,*)'k(i)'
      do i=1,n
          x(i)=xmin+i*h
          V(i)=gausspot(x(i))
          k2(i)=2*rm*(e-v(i))/hbarc**2-l*(l+1)*1./x(i)**2
-         write(12,*)k2(i)
      end do
      do i=2,n+2
          y(i+1)=2*(1-5*h**2*k2(i)/12.)*y(i)-(1+h**2*k2(i-1)/12.)*y(i-1)
@@ -128,7 +122,7 @@ end program
      function gausspot(r)
        implicit none
         real*8 r,v0,r0,gausspot,a
-        v0=-72.16d0
+        v0=-72.08512d0
         r0=0.
         a=1.484d0
           if (a.gt.1e-6) then
