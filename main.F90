@@ -35,11 +35,11 @@ program main
  real*8::h,zero,eta,rho
  complex*16::b,dyn
  real*8,dimension(0:3000)::x
- real*8,dimension(1:5)::nfc,ngc,nfcp,ngcp
+ real*8,dimension(0:5)::nfc,ngc,nfcp,ngcp
  complex*16,dimension(0:3000)::y,yreal
- complex*16,dimension(1:5)::s,c
- complex*16,dimension(1:5)::hin,hout
- complex*16,dimension(1:5)::dyhin,dyhout
+ complex*16,dimension(0:5)::s,c
+ complex*16,dimension(0:5)::hin,hout
+ complex*16,dimension(0:5)::dhin,dhout
  real*8,external::gausspot
  rm=mp*mn*amu/(mp+mn)
  ecm=elab*mn/(mp+mn)
@@ -55,19 +55,19 @@ program main
  write(*,*) 'coul90: ifail=',ifail; stop
  endif
  do l=0,lmax
-    call left(rm,ecm,h,l,x,y)
+    call numerov(rm,ecm,h,l,x,y)
     dyn=(y(n-2)-8.*y(n-1)+8.*y(n+1)-y(n+2))/(12.*h)  
     hin(l)=ngc(l)+b*nfc(l)
     hout(l)=ngc(l)-b*nfc(l)
-    dyhin(l)=ngcp(l)+b*nfcp(l)
-    dyhout(l)=ngcp(l)-b*nfcp(l)
+    dhin(l)=ngcp(l)+b*nfcp(l)
+    dhout(l)=ngcp(l)-b*nfcp(l)
     !  compute the s matrix
-    s(l)=(y(n)*dyhout(l)-dyn*hout(l))/(y(n)*dyhin(l)-dyn*hin(l))
+    s(l)=(k*y(n)*dhout(l)-dyn*hout(l))/(k*y(n)*dhin(l)-dyn*hin(l))
     !  compute c
     c(l)=b*(hout(l)-s(l)*hin(l))/(2*y(n))
     !  OUTPUT S-METRIX C & WAVE FUNCTION
     yreal=y*c(l)
-    !write(*,*)l,real(s(l))
+    write(12,*)l,real(s(l)),aimag(s(l))
     do i=0,n
       write(11,*)x(i),real(yreal(i)),aimag(yreal(i))  
     end do
@@ -79,7 +79,6 @@ end program
  !------------------------------------------------------------------------
  !
  !   Numerov algorithm
- !   LEFT
  !
  !   INPUT:
  !   e: Test eigenvalues
@@ -91,7 +90,7 @@ end program
  !   OUTPUT:
  !   y(i): wave function
  
-     subroutine left(rm,e,h,l,x,y)
+     subroutine numerov(rm,e,h,l,x,y)
      use input
      implicit none
      integer::i,l
@@ -104,7 +103,6 @@ end program
      y(1)=h
      k2(1)=2*rm*(e-gausspot(h))/hbarc**2-l*(l+1)*1./h**2
      y(2)=2.*y(1)-h**2*k2(1)*y(1)
-     write(12,*)l,y(2)
      do i=1,n
          x(i)=xmin+i*h
          V(i)=gausspot(x(i))
