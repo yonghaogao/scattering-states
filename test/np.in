@@ -1,0 +1,2 @@
+&global    n=600 lmax=5 xmin=0.d0 xmax=60.0d0 elab=10.0d0 /
+&grid      mp=1.0078d0 mn=1.0086d0 hbarc=197.327d0 /
