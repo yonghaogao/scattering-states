@@ -13,6 +13,8 @@
         use comwf
 
         implicit none
+        real :: start, finish
+        call cpu_time(start)
         call input()
         call compute()
       !  call output()
@@ -20,7 +22,8 @@
         WRITE(*,*) 'smoothie version Date: ',VERDATE
         write(*,*) "smoothie git version: ", VERREV
         write(*,*) "smoothie compile Date:", COMPDATE
-
+        call cpu_time(finish)
+        print '("Time = ",f6.3," seconds.")',finish-start
        end program
  !------------------------------------------------------------------------
  

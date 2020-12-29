@@ -15,11 +15,16 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8::zero,eta,rho
       complex*16::b,dyn
       real*8,dimension(0:3000)::x
-      real*8,dimension(0:5)::nfc,ngc,nfcp,ngcp
+      real*8,allocatable::nfc(:),ngc(:),nfcp(:),ngcp(:)
       complex*16,dimension(0:3000)::y,yreal
-      complex*16,dimension(0:5)::s,c
-      complex*16,dimension(0:5)::hin,hout
-      complex*16,dimension(0:5)::dhin,dhout
+      complex*16,allocatable::s(:),c(:)
+      complex*16,allocatable::hin(:),hout(:)
+      complex*16,allocatable::dhin(:),dhout(:)
+      ! allocate(x(0:n))
+      ! allocate(y(0:n+3),yreal(0:n+3))
+      allocate(nfc(0:lmax),ngc(0:lmax),nfcp(0:lmax),ngcp(0:lmax))
+      allocate(s(0:lmax),c(0:lmax))
+      allocate(hin(0:lmax),hout(0:lmax),dhin(0:lmax),dhout(0:lmax))
       b=(0.,1.0)
       eta=0.
       zero=0.
@@ -49,6 +54,11 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
           end do
           write(11,*)'&'
       end do
+      ! deallocate(x)
+      ! deallocate(y,yreal)
+      deallocate(nfc,ngc,nfcp,ngcp)
+      deallocate(s,c)
+      deallocate(hin,hout,dhin,dhout)
       end subroutine
 
       

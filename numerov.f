@@ -1,4 +1,4 @@
-!     module for potential 
+!     module for wave function
       module numwf 
       implicit none 
       contains
@@ -16,7 +16,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
  !   del:adjustable parameter
  !   x(i):ridus
  !   k2:  k2=k**2
- 
+
  !   OUTPUT:
  !   y(i): wave function
       subroutine numerov(l,x,y)
@@ -28,13 +28,12 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       complex*16,dimension(0:3000)::V,k2
       y(0)=0
       y(1)=h
-      call gausspot(h,v(1))
+      call gausspot(V)
       k2(1)=2*rm*(ecm-v(1))/hbarc**2-l*(l+1)*1./h**2
       y(2)=2.*y(1)-h**2*k2(1)*y(1)
       x(0)=0.d0
       do i=1,n
          x(i)=xmin+i*h
-         call gausspot(x(i),v(i))
          k2(i)=2*rm*(ecm-v(i))/hbarc**2-l*(l+1)*1./x(i)**2
       end do
       do i=2,n+2
@@ -42,19 +41,22 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
          y(i+1)=y(i+1)/(1+h**2*k2(i+1)/12.)
       end do
       end subroutine
-  
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 !>    this subroutine calculates gauss potential.
 !     c *** Gaussian Potential
-      subroutine gausspot(r,out)
+      subroutine gausspot(v)
+      use inputfile 
       implicit none
-      real*8 r,v0,r0,a
-      complex*16::out
+      integer::i
+      real*8 ::v0,r0,a
+      complex*16,dimension(0:3000)::V
       v0=-72.08512d0
       r0=0.
       a=1.484d0
        if (a.gt.1e-6) then
-         out=V0*exp(-(r-r0)**2/a**2)
+       do i=0,n
+         V(i)=V0*exp(-(i*h-r0)**2/a**2)
+       end do
            else
              write(*,*)'a too small in gausspot!'
              stop
